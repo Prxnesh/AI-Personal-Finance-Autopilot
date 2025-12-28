@@ -1,10 +1,20 @@
+"""
+PDF Parser for Bank Statements
+Now uses enhanced pdfplumber-based extraction with fallback to regex
+"""
+
+import pypdf
 from pypdf import PdfReader
 import re
 from datetime import datetime
 from typing import List, Dict, Any
-from .csv_parser import generate_transaction_hash, normalize_date, clean_amount
-import tempfile
-import os
+import hashlib
+import logging
+
+# Import enhanced PDF parser
+from app.utils.enhanced_pdf_parser import parse_pdf_transactions as enhanced_parse
+
+logger = logging.getLogger(__name__)
 
 
 def extract_text_from_pdf(file_path: str) -> str:
@@ -12,7 +22,7 @@ def extract_text_from_pdf(file_path: str) -> str:
     Extract all text from a PDF file
     """
     try:
-        reader = PdfReader(file_path)
+        reader = pypdf.PdfReader(file_path)
         text = ""
         for page in reader.pages:
             text += page.extract_text() + "\n"
@@ -21,17 +31,62 @@ def extract_text_from_pdf(file_path: str) -> str:
         raise ValueError(f"Unable to read PDF file: {str(e)}")
 
 
-def parse_pdf_transactions(
-    file_path: str,
-    user_id: int
-) -> List[Dict[str, Any]]:
+def parse_pdf_transactions(pdf_path: str) -> List[Dict[str, Any]]:
     """
-    Parse PDF bank statement and extract transactions
-    Uses pattern matching for common bank statement formats
+    Parse bank statement PDF and extract transactions
+    Uses enhanced pdfplumber parser with fallback to regex-based extraction
     """
-    text = extract_text_from_pdf(file_path)
+    try:
+        # Try enhanced parser first (pdfplumber with table detection)
+        transactions = enhanced_parse(pdf_path)
+        if transactions and len(transactions) > 0:
+            logger.info(f"Successfully parsed {len(transactions)} transactions using enhanced parser")
+            return transactions
+        
+        # Fallback to legacy regex-based extraction  
+        logger.warning("Enhanced parser found no transactions, trying legacy method")
+        return _legacy_parse_pdf(pdf_path)
+        
+    except Exception as e:
+        logger.error(f"Error parsing PDF with enhanced parser: {e}")
+        # Try legacy as last resort
+        try:
+            logger.info("Attempting legacy PDF parsing as fallback.")
+            return _legacy_parse_pdf(pdf_path)
+        except Exception as legacy_e:
+            logger.error(f"Error parsing PDF with legacy parser: {legacy_e}")
+            return []
+
+
+def _legacy_parse_pdf(pdf_path: str) -> List[Dict[str, Any]]:
+    """
+    Legacy regex-based PDF parsing (fallback)
+    Parses PDF bank statement and extract transactions using pattern matching.
+    Note: This function no longer takes user_id as an argument.
+    """
+    text = extract_text_from_pdf(pdf_path)
     
     transactions = []
+    
+    # Helper function to normalize dates
+    def normalize_date(date_str):
+        formats = ['%d/%m/%Y', '%d-%m-%Y', '%m/%d/%Y', '%Y-%m-%d', '%d/%m/%y', '%d-%m-%y']
+        for fmt in formats:
+            try:
+                return datetime.strptime(date_str, fmt).strftime('%Y-%m-%d')
+            except ValueError:
+                continue
+        return date_str
+    
+    # Helper function to clean amounts
+    def clean_amount(amount_str):
+        if not amount_str:
+            return 0.0
+        cleaned = amount_str.replace(',', '').replace('₹', '').replace('Rs', '').strip()
+        try:
+            return float(cleaned)
+        except ValueError:
+            return 0.0
     
     # Common patterns for bank statements
     # Pattern 1: Date Description Amount (most common)
@@ -87,7 +142,9 @@ def parse_pdf_transactions(
                         if not is_credit:
                             is_credit = False
                         
-                        transaction_hash = generate_transaction_hash(date, description, amount, user_id)
+                        # Generate hash without user_id for PDF imports
+                        transaction_data = f"{date}|{description}|{amount}"
+                        transaction_hash = hashlib.md5(transaction_data.encode()).hexdigest()
                         
                         transactions.append({
                             'date': date,
@@ -122,7 +179,9 @@ def parse_pdf_transactions(
                         except:
                             continue
                     
-                    transaction_hash = generate_transaction_hash(date, description, amount, user_id)
+                    # Generate hash without user_id for PDF imports
+                    transaction_data = f"{date}|{description}|{amount}"
+                    transaction_hash = hashlib.md5(transaction_data.encode()).hexdigest()
                     
                     transactions.append({
                         'date': date,
