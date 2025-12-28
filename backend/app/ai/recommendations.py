@@ -3,8 +3,9 @@ from datetime import datetime, timedelta
 from collections import defaultdict
 import statistics
 from sqlalchemy.orm import Session
-from ..models import Transaction, Prediction
-from ..schemas import RecommendationResponse
+from app.models import Transaction, Prediction
+from app.schemas import RecommendationResponse
+
 
 
 class RecommendationEngine:

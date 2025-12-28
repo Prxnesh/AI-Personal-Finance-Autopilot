@@ -2,8 +2,9 @@ from sqlalchemy.orm import Session
 from typing import List, Dict, Any
 import hashlib
 from datetime import datetime
-from ..models import Transaction, Category
-from ..ai.categorizer import HybridCategorizer
+from app.models import Transaction, Category
+from app.ai.categorizer import HybridCategorizer
+
 
 
 def save_transactions(

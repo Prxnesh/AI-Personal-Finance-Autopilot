@@ -1,11 +1,12 @@
 from fastapi import APIRouter, Depends, BackgroundTasks
 from sqlalchemy.orm import Session
 from typing import List
-from ...models.base import get_db
-from ...models import User, Prediction
-from ...schemas import PredictionResponse
-from ...ai.predictions import PredictionEngine
-from .auth import get_current_user
+from app.models.base import get_db
+from app.models import User, Prediction
+from app.schemas import PredictionResponse
+from app.ai.predictions import PredictionEngine
+from app.api.auth import get_current_user
+
 
 router = APIRouter(prefix="/predictions", tags=["Predictions"])
 

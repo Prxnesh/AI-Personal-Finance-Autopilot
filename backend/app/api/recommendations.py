@@ -1,11 +1,12 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from typing import List
-from ...models.base import get_db
-from ...models import User
-from ...schemas import RecommendationResponse
-from ...ai.recommendations import RecommendationEngine
-from .auth import get_current_user
+from app.models.base import get_db
+from app.models import User
+from app.schemas import RecommendationResponse
+from app.ai.recommendations import RecommendationEngine
+from app.api.auth import get_current_user
+
 
 router = APIRouter(prefix="/recommendations", tags=["Recommendations"])
 

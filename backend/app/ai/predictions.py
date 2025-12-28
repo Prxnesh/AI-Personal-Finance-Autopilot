@@ -4,7 +4,8 @@ from collections import defaultdict
 import statistics
 from sqlalchemy.orm import Session
 from sqlalchemy import func, extract
-from ..models import Transaction, Prediction
+from app.models import Transaction, Prediction
+
 
 
 class PredictionEngine:

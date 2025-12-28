@@ -3,8 +3,9 @@ from sqlalchemy import func, extract
 from typing import List, Dict, Any
 from datetime import datetime, timedelta
 from collections import defaultdict
-from ..models import Transaction
-from ..schemas import MonthlySummary, CategorySummary, CashflowPoint, DashboardResponse
+from app.models import Transaction
+from app.schemas import MonthlySummary, CategorySummary, CashflowPoint, DashboardResponse
+
 
 
 def get_dashboard_data(db: Session, user_id: int) -> DashboardResponse:

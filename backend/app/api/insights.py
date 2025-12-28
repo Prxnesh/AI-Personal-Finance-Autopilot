@@ -1,11 +1,12 @@
 from fastapi import APIRouter, Depends, BackgroundTasks
 from sqlalchemy.orm import Session
 from typing import List
-from ...models.base import get_db
-from ...models import User, Insight
-from ...schemas import InsightResponse
-from ...ai.insights import InsightsEngine
-from .auth import get_current_user
+from app.models.base import get_db
+from app.models import User, Insight
+from app.schemas import InsightResponse
+from app.ai.insights import InsightsEngine
+from app.api.auth import get_current_user
+
 
 router = APIRouter(prefix="/insights", tags=["Insights"])
 

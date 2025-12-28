@@ -4,21 +4,22 @@ from typing import List
 import tempfile
 import os
 import hashlib
-from ...models.base import get_db
-from ...models import User
-from ...schemas import (
+from app.models.base import get_db
+from app.models import User
+from app.schemas import (
     TransactionResponse, 
     TransactionUpdate, 
     UploadResponse
 )
-from ...services.transaction_service import (
+from app.services.transaction_service import (
     save_transactions,
     update_transaction_category,
     get_user_transactions
 )
-from ...utils.csv_parser import parse_csv_transactions
-from ...utils.pdf_parser import parse_pdf_transactions
-from .auth import get_current_user
+from app.utils.csv_parser import parse_csv_transactions
+from app.utils.pdf_parser import parse_pdf_transactions
+from app.api.auth import get_current_user
+
 
 router = APIRouter(prefix="/transactions", tags=["Transactions"])
 
